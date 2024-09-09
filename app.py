@@ -14,55 +14,35 @@ from io import StringIO
 class get_products:
 
     def products_amazon(self, url_p, start_page, end_page) -> dict:
-        """
-        :param HEADERS: user
-        :param end_page: page number end
-        :param start_page: page number start
-        :param url_p: url principal
-        :return: dic with product name , price and rate
-        """
         data = {"title": [], "price": [], "rate": []}
-        l = []
-        HEADERS = ({'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                                  'Chrome/127.0.0.0 Safari/537.36', 'Accept-Language': 'en-US,en;q=0.5'})
-        url = url_p
-        # Headers for request
-        for i in range(start_page, end_page):
-            url = self.get_urls(url, start_page, end_page)
-            print(url)
-            response = requests.get(url, headers=HEADERS)
-            # Soup object containing all data
-            soup = BeautifulSoup(response.content, 'html.parser')
-            # find all is find all the tags available inside our page that we joust extracted where the class name is "
-            # class="a-link-normal s-underline-text s-underline-link-text s-link-style a-text-normal" "
+        HEADERS = ({
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.5'
+        })
 
+        url = url_p
+        for i in range(start_page, end_page):
+            response = requests.get(url, headers=HEADERS)
+            if response.status_code != 200:
+                print(f"Error: Unable to fetch page {i}")
+                continue
+
+            soup = BeautifulSoup(response.content, 'html.parser')
             links = soup.find_all("a", attrs={
                 "class": "a-link-normal s-underline-text s-underline-link-text s-link-style a-text-normal"})
-            links_list = []
-            # class=""
-            # Loop for extracting links from tag objects
-            for link in links:
-                links_list.append(link.get('href'))
-                print(f'url: {url} loop{i}')
-                # Loop for extracting details from each link
-                # loop add arl amz + link to find product
-                # Create a new soup and extracting details from each link
-
-                # filter links
-                links_filters = self.filter_links(links_list)
+            links_filters = self.filter_links([link.get('href') for link in links])
 
             for link in links_filters:
-                # Headers for request
-                print(f'url: {url} loop:{i}')
-
-                new_webpage = requests.get("https://amazon.com/" + link, headers=HEADERS)
+                new_webpage = requests.get("https://amazon.com" + link, headers=HEADERS)
                 new_soup = BeautifulSoup(new_webpage.content, 'html.parser')
-
-                # Function calls to display all necessary product information
 
                 data['title'].append(self.get_title(new_soup))
                 data['price'].append(self.get_price(new_soup))
                 data['rate'].append(self.get_rate(new_soup))
+
+            url = self.obtener_siguiente_enlace_amazon(url)
+            if not url:
+                break
 
         return data
 
