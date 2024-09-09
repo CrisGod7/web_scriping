@@ -9,22 +9,31 @@ import string
 import time
 import requests
 from bs4 import BeautifulSoup
+from concurrent.futures import ThreadPoolExecutor
 
 
 class GetProducts:
 
+  def fetch_product_data(self, link, headers):
+    """
+    concurrent.futures: Puedes paralelizar las solicitudes HTTP utilizando ThreadPoolExecutor de la librería concurrent.futures.
+    Esto te permitirá realizar múltiples solicitudes simultáneamente, reduciendo el tiempo total de scraping.
+    :param link:
+    :param headers:
+    :return: dic(title,price,rating)
+    """
+    new_webpage = requests.get("https://amazon.com" + link, headers=headers)
+    new_soup = BeautifulSoup(new_webpage.content, 'html.parser')
+    return {
+      'title': self.get_title(new_soup),
+      'price': self.get_price(new_soup),
+      'rate': self.get_rate(new_soup)
+    }
+
   def products_amazon(self, url_p, start_page, end_page) -> dict:
-    """
-    :param url_p:
-    :param start_page:
-    :param end_page:
-    :return: dict('title', 'price', 'rating')
-    """
     data = {"title": [], "price": [], "rate": []}
     HEADERS, PROXIES, session = start_requests()
-    """
-    Crear un metodo para crear el header, proxies and session. para evitar el bloque de amzaon.
-    """
+
     url = url_p
     for i in range(start_page, end_page):
       response = requests.get(url, headers=HEADERS)
@@ -37,13 +46,13 @@ class GetProducts:
         "class": "a-link-normal s-underline-text s-underline-link-text s-link-style a-text-normal"})
       links_filters = self.filter_links([link.get('href') for link in links])
 
-      for link in links_filters:
-        new_webpage = requests.get("https://amazon.com" + link, headers=HEADERS)
-        new_soup = BeautifulSoup(new_webpage.content, 'html.parser')
+      with ThreadPoolExecutor(max_workers=5) as executor:
+        results = executor.map(lambda link: self.fetch_product_data(link, HEADERS), links_filters)
 
-        data['title'].append(self.get_title(new_soup))
-        data['price'].append(self.get_price(new_soup))
-        data['rate'].append(self.get_rate(new_soup))
+      for result in results:
+        data['title'].append(result['title'])
+        data['price'].append(result['price'])
+        data['rate'].append(result['rate'])
 
       next_page = get_next_url(url)
       if not next_page:
@@ -157,13 +166,19 @@ def get_next_url(url_actual):
     next_url = soup.find('a', {'class': 's-pagination-next'})
 
     if next_url and 'href' in next_url.attrs:
-      return next_url['href']
+      href = next_url['href']
+      # Verifica si el enlace es relativo o absoluto
+      if href.startswith("http"):
+        return href
+      else:
+        return "https://www.amazon.com" + href
     else:
       return None
 
   except requests.exceptions.RequestException as e:
     print(f"Error al obtener la página: {e}")
   return None
+
 
 def delay_request():
   """
