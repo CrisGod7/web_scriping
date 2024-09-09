@@ -11,7 +11,7 @@ import re
 from io import StringIO
 
 
-class get_products:
+class GetProducts:
 
     def products_amazon(self, url_p, start_page, end_page) -> dict:
         data = {"title": [], "price": [], "rate": []}
