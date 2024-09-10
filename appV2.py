@@ -27,6 +27,7 @@ class GetProducts:
     """
     url = url_p
     for i in range(start_page, end_page):
+      print(f'page {i}')
       response = requests.get(url, headers=HEADERS)
       if response.status_code != 200:
         print(f"Error: Unable to fetch page {i}")
@@ -38,6 +39,7 @@ class GetProducts:
       links_filters = self.filter_links([link.get('href') for link in links])
 
       for link in links_filters:
+        print(f"link: {link}")
         new_webpage = requests.get("https://amazon.com" + link, headers=HEADERS)
         new_soup = BeautifulSoup(new_webpage.content, 'html.parser')
 
