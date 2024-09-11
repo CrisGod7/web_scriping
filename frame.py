@@ -14,7 +14,6 @@ print(dic_data)
 # Crear un DataFrame a partir del StringIO
 
 
-df = pd.read_cv("product_app.csv")
 df_2 = pd.DataFrame(dic_data)
 df_2.to_csv("product2_app.csv", index=False)
 print(df_2)
