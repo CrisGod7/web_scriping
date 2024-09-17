@@ -124,6 +124,15 @@ class GetProducts:
         return filtered_links
 
 
+PROXIES = {
+        'http': 'http://10.10.1.10:3128',
+        'https': 'http://10.10.1.10:1080',
+        # Añade más proxies aquí
+    }
+
+def get_random_proxy():
+    return {'http': random.choice(PROXIES), 'https': random.choice(PROXIES)}
+
 def start_requests():
     delay_request()
     session = requests.Session()
@@ -145,10 +154,15 @@ def start_requests():
         'https': 'http://10.10.1.10:1080',
         # Añade más proxies aquí
     }
+
     return HEADERS, PROXIES, session
 
 
+
 def get_next_url(url_actual):
+    #add delay_request()
+    delay_request()
+
     HEADERS, PROXIES, session = start_requests()
 
     try:
