@@ -6,10 +6,17 @@ from tkinter import simpledialog, messagebox
 class AppInterface:
 
     def __init__(self, root):
-        self.dic_data = None
         self.root = root
+        self.center_window(400, 300)  # Ajusta el tamaño de la ventana según sea necesario
         self.root.title("Amazon Scraper")
         self.create_widgets()
+
+    def center_window(self, width, height):
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        x = (screen_width // 2) - (width // 2)
+        y = (screen_height // 2) - (height // 2)
+        self.root.geometry(f'{width}x{height}+{x}+{y}')
 
     def create_widgets(self):
         self.label = tk.Label(self.root, text="Seleccione una opción:")
